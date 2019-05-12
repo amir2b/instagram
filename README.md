@@ -1,2 +1,2 @@
-# instagram
+# Instagram
 Fetch data from Instagram
