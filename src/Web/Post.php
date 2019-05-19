@@ -6,9 +6,9 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Support\Facades\Storage;
 
-class Profile
+class Post
 {
-    public static function following($end_cursor = null)
+    public static function likes(string $code, $end_cursor = null)
     {
         ## make cookie
         if (Storage::exists('cookie.json')) {
@@ -34,13 +34,12 @@ class Profile
                 'x-ig-app-id' => '936619743392459',
                 'X-Instagram-Gis' => 'd6d2c3f877e447f598bf0bed0bfa88e4',
             ],
-            //'http_errors' => false,
+            'http_errors' => false,
             'query' => [
-                'query_hash' => 'c56ee0ae1f89cdbd1c89e2bc6b8f3d18',
+                'query_hash' => 'e0f59e4a1c8d78d0161873bc2ee7ec44',
                 'variables' => json_encode([
-                    'id' => config('instagram.web.user_id'),
-                    'include_reel' => 'true',
-                    'fetch_mutual' => 'false',
+                    'shortcode' => $code,
+                    'include_reel' => true,
                     'first' => 24,
                     'after' => $end_cursor,
                 ]),
@@ -54,7 +53,7 @@ class Profile
         $response_json = json_decode($response->getBody(), true);
 
         if ($response_json['status'] === 'ok') {
-            return $response_json['data']['user']['edge_follow'];
+            return $response_json['data']['shortcode_media']['edge_liked_by'];
         }
 
         dd($response_json);
@@ -62,7 +61,7 @@ class Profile
         return [];
     }
 
-    public static function followers($end_cursor = null)
+    public static function get(string $code)
     {
         ## make cookie
         if (Storage::exists('cookie.json')) {
@@ -88,15 +87,15 @@ class Profile
                 'x-ig-app-id' => '936619743392459',
                 'X-Instagram-Gis' => 'd6d2c3f877e447f598bf0bed0bfa88e4',
             ],
-            //'http_errors' => false,
+            'http_errors' => false,
             'query' => [
-                'query_hash' => '56066f031e6239f35a904ac20c9f37d9',
+                'query_hash' => '477b65a610463740ccdb83135b2014db',
                 'variables' => json_encode([
-                    'id' => config('instagram.web.user_id'),
-                    'include_reel' => 'true',
-                    'fetch_mutual' => 'false',
-                    'first' => 24,
-                    'after' => $end_cursor,
+                    'shortcode' => $code,
+                    'child_comment_count' => 3,
+                    'fetch_comment_count' => 40,
+                    'parent_comment_count' => 24,
+                    'has_threaded_comments' => true,
                 ]),
             ],
         ]);
@@ -108,7 +107,7 @@ class Profile
         $response_json = json_decode($response->getBody(), true);
 
         if ($response_json['status'] === 'ok') {
-            return $response_json['data']['user']['edge_followed_by'];
+            return $response_json['data']['shortcode_media'];
         }
 
         dd($response_json);

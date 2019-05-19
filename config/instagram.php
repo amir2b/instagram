@@ -8,6 +8,7 @@ return [
     ],
 
     'web' => [
+        'user_id' => env('INSTAGRAM_USER_ID'),
         'username' => env('INSTAGRAM_USERNAME'),
         'password' => env('INSTAGRAM_PASSWORD'),
     ],

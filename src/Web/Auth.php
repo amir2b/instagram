@@ -8,6 +8,43 @@ use Illuminate\Support\Facades\Storage;
 
 class Auth
 {
+    public static function logout()
+    {
+        ## make cookie
+        if (!Storage::exists('cookie.json')) {
+            return true;
+        }
+
+        $cookies = json_decode(Storage::get('cookie.json'), true);
+        $jar = new CookieJar(false, $cookies);
+
+        ## make client
+        $client = new Client([
+            'base_uri' => 'https://www.instagram.com/',
+        ]);
+
+        ## send username and password
+        $response = $client->post('accounts/logout/', [
+            'cookies' => $jar,
+            'headers' => [
+                'User-Agent' => config('instagram.user_agent'),
+                'Referer' => 'https://www.instagram.com/h.o.m.a211/',
+                'upgrade-insecure-requests' => '1',
+                'origin' => 'https://www.instagram.com',
+                'x-csrftoken' => $jar->getCookieByName('csrftoken')->getValue(),
+            ],
+            'form_params' => [
+                'csrfmiddlewaretoken' => $jar->getCookieByName('csrftoken')->getValue(),
+            ],
+            'http_errors' => false,
+        ]);
+
+        ## save cookie
+        Storage::delete('cookie.json');
+
+        return true;
+    }
+
     /**
      * @param string|null $username
      * @param string|null $password
@@ -68,10 +105,12 @@ class Auth
         ## parse json
         $response_json = json_decode($response->getBody(), true);
 
-        ## if not login
-        if (array_key_exists('authenticated', $response_json) && $response_json['authenticated'] === false && $response_json['user'] === false) {
+        dd($response_json);
+
+        ## if successfully login
+        if (($response_json['authenticated'] ?? false) === true && ($response_json['status'] ?? 'nok') === 'ok') {
             return [
-                'login' => false,
+                'login' => true,
             ];
         }
 
@@ -85,7 +124,7 @@ class Auth
 
         ## if successfully login
         return [
-            'login' => true,
+            'login' => false,
         ];
     }
 
